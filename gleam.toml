@@ -1,4 +1,4 @@
-name = "pg_for_gleam"
+name = "process_groups"
 version = "1.0.0"
 
 description = "Process Groups for gleam"
