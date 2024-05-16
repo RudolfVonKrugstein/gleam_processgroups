@@ -1,5 +1,5 @@
 name = "processgroups"
-version = "0.1.0"
+version = "0.1.1"
 
 description = "Process Groups for gleam"
 licences = ["Apache-2.0"]
