@@ -4,7 +4,7 @@ Simple wrapper around [erlang process groups] in gleam.
 
 This library mainly wraps [erlang process groups], so go to its documentation for details.
 
-[![Package Version](https://img.shields.io/hexpm/v/pg_for_gleam)](https://hex.pm/packages/process_groups)
+[![Package Version](https://img.shields.io/hexpm/v/process_groups)](https://hex.pm/packages/process_groups)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/process_groups/)
 
 ## Usage
