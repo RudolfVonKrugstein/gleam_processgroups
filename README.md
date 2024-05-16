@@ -1,9 +1,8 @@
 # process groups for gleam
 
-Simple wrapper around [erlang process groups](https://www.erlang.org/doc/man/pg.html)
-in gleam.
+Simple wrapper around [erlang process groups] in gleam.
 
-This library mainly wraps [erlang proess groups], so go to its documentation for details.
+This library mainly wraps [erlang process groups], so go to its documentation for details.
 
 [![Package Version](https://img.shields.io/hexpm/v/pg_for_gleam)](https://hex.pm/packages/process_groups)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/process_groups/)
