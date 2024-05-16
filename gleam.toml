@@ -2,7 +2,12 @@ name = "processgroups"
 version = "0.1.1"
 
 description = "Process Groups for gleam"
+gleam = ">= 1.1.0"
 licences = ["Apache-2.0"]
+links = [
+  { title = "Gleam", href = "https://gleam.run" },
+  { title = "Erlang Process Groups", href = "https://www.erlang.org/doc/man/pg.html" },
+]
 repository = { type = "github", user = "RudolfVonKrugstein", repo = "gleam_processgroups" }
 
 [dependencies]
