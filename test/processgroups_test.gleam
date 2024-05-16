@@ -2,7 +2,7 @@ import gleam/erlang/process
 import gleam/otp/task
 import gleeunit
 import gleeunit/should
-import process_groups as pg
+import processgroups as pg
 
 pub fn main() {
   gleeunit.main()

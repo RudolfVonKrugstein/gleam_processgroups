@@ -1,9 +1,9 @@
-name = "process_groups"
+name = "processgroups"
 version = "0.1.0"
 
 description = "Process Groups for gleam"
 licences = ["Apache-2.0"]
-repository = { type = "github", user = "RudolfVonKrugstein", repo = "pg_for_gleam" }
+repository = { type = "github", user = "RudolfVonKrugstein", repo = "gleam_processgroups" }
 
 [dependencies]
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"

@@ -4,22 +4,22 @@ Simple wrapper around [erlang process groups] in gleam.
 
 This library mainly wraps [erlang process groups], so go to its documentation for details.
 
-[![Package Version](https://img.shields.io/hexpm/v/process_groups)](https://hex.pm/packages/process_groups)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/process_groups/)
+[![Package Version](https://img.shields.io/hexpm/v/processgroups)](https://hex.pm/packages/processgroups)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/processgroups/)
 
 ## Usage
 
 Add this  library to your Gleam project
 
 ```sh
-gleam add process_groups
+gleam add processgroups
 ```
 
 And use it in your project
 
 ```gleam
 import io
-import process_groups as pg
+import processgroups as pg
 import gleam/erlang/process
 
 // some type we use to distinguish process groups
@@ -64,7 +64,7 @@ pub fn main() {
 ```
 
 
-Further documentation can be found at <https://hexdocs.pm/process_groups>.
+Further documentation can be found at <https://hexdocs.pm/processgroups>.
 
 ## Development
 
