@@ -1,4 +1,5 @@
 import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/erlang
 import gleam/erlang/atom
 import gleam/erlang/process
@@ -120,23 +121,25 @@ pub fn selecting_process_group_monitor(
   process.selecting_record4(
     selector,
     monitor.tag,
-    fn(event: dynamic.Dynamic, group: dynamic.Dynamic, pids: dynamic.Dynamic) {
+    fn(event: dynamic.Dynamic, _group: dynamic.Dynamic, pids: dynamic.Dynamic) {
       let assert Ok(event) = atom.from_dynamic(event)
 
-      // helper to convert dynamic to pid within a dynamic.to_list
-      // maybe there is a better way ..
-      let to_pid: fn(dynamic.Dynamic) ->
-        Result(process.Pid, List(dynamic.DecodeError)) = fn(d) {
-        Ok(dynamic.unsafe_coerce(d))
-      }
-
-      let assert Ok(pids) = dynamic.list(of: to_pid)(pids)
-
-      let group: group = dynamic.unsafe_coerce(group)
+      let assert Ok(pids) =
+        decode.run(
+          pids,
+          decode.list(
+            decode.new_primitive_decoder("pid", fn(d) {
+              case process.pid_from_dynamic(d) {
+                Ok(pid) -> Ok(pid)
+                Error(_) -> Error(process.self())
+              }
+            }),
+          ),
+        )
 
       let payload = case atom.to_string(event) {
-        "join" -> ProcessJoined(group, pids)
-        "leave" -> ProcessLeft(group, pids)
+        "join" -> ProcessJoined(monitor.group, pids)
+        "leave" -> ProcessLeft(monitor.group, pids)
         _ -> panic
       }
 
