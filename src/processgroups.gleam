@@ -1,8 +1,8 @@
 import gleam/dynamic
 import gleam/dynamic/decode
-import gleam/erlang
 import gleam/erlang/atom
 import gleam/erlang/process
+import gleam/erlang/reference.{type Reference}
 
 /// A scope for process groups is an atom, we type alias to make it clearer
 pub type Scope =
@@ -57,7 +57,7 @@ pub fn leave_many_scope(
 /// a process group. You can than use `selecting_process_group_monitor`
 /// To receive `GroupMonitorEvent` messages using `gleam/erlang/process.select`.
 pub opaque type GroupMonitor(group) {
-  GroupMonitor(tag: erlang.Reference, group: group)
+  GroupMonitor(tag: Reference, group: group)
 }
 
 /// The events send when monitoring a process group.
@@ -74,7 +74,7 @@ pub fn monitor(group: group) -> #(GroupMonitor(group), List(process.Pid)) {
 }
 
 @external(erlang, "pg", "monitor")
-fn erlang_monitor(group: group) -> #(erlang.Reference, List(process.Pid))
+fn erlang_monitor(group: group) -> #(Reference, List(process.Pid))
 
 pub fn monitor_scope(
   scope: Scope,
@@ -88,7 +88,7 @@ pub fn monitor_scope(
 pub fn erlang_monitor_scope(
   scope: Scope,
   group: group,
-) -> #(erlang.Reference, List(process.Pid))
+) -> #(Reference, List(process.Pid))
 
 /// Receive monitoring events.
 ///
@@ -118,34 +118,25 @@ pub fn selecting_process_group_monitor(
   mapping: fn(GroupMonitorEvent(group)) -> payload,
 ) -> process.Selector(payload) {
   // monitoring sends 4-tuples, see https://www.erlang.org/doc/man/pg.html#monitor_scope-0
-  process.selecting_record4(
-    selector,
-    monitor.tag,
-    fn(event: dynamic.Dynamic, _group: dynamic.Dynamic, pids: dynamic.Dynamic) {
-      let assert Ok(event) = atom.from_dynamic(event)
+  process.select_record(selector, monitor.tag, 3, fn(record: dynamic.Dynamic) {
+    let assert Ok(event) =
+      decode.run(record, decode.field(1, decode.dynamic, decode.success))
+    let assert Ok(pids) =
+      decode.run(record, decode.field(3, decode.dynamic, decode.success))
 
-      let assert Ok(pids) =
-        decode.run(
-          pids,
-          decode.list(
-            decode.new_primitive_decoder("pid", fn(d) {
-              case process.pid_from_dynamic(d) {
-                Ok(pid) -> Ok(pid)
-                Error(_) -> Error(process.self())
-              }
-            }),
-          ),
-        )
+    let event = atom.cast_from_dynamic(event)
 
-      let payload = case atom.to_string(event) {
-        "join" -> ProcessJoined(monitor.group, pids)
-        "leave" -> ProcessLeft(monitor.group, pids)
-        _ -> panic
-      }
+    let assert Ok(pids) =
+      decode.run(pids, decode.list(pid_decoder(process.self())))
 
-      mapping(payload)
-    },
-  )
+    let payload = case atom.to_string(event) {
+      "join" -> ProcessJoined(monitor.group, pids)
+      "leave" -> ProcessLeft(monitor.group, pids)
+      _ -> panic
+    }
+
+    mapping(payload)
+  })
 }
 
 @external(erlang, "pg", "demonitor")
@@ -171,3 +162,15 @@ pub fn which_groups() -> List(group)
 
 @external(erlang, "pg", "which_groups")
 pub fn which_groups_scope(scope: Scope) -> List(group)
+
+fn pid_decoder(zero: process.Pid) {
+  decode.new_primitive_decoder("pid", fn(d) {
+    case check_pid(d) {
+      Ok(pid) -> Ok(pid)
+      Error(_) -> Error(zero)
+    }
+  })
+}
+
+@external(erlang, "processgroups_ffi", "pid_decoder")
+fn check_pid(maybe_pid: dynamic.Dynamic) -> Result(process.Pid, Nil)

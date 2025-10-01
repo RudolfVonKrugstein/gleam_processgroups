@@ -1,5 +1,4 @@
 import gleam/erlang/process
-import gleam/otp/task
 import gleeunit
 import gleeunit/should
 import processgroups as pg
@@ -74,8 +73,12 @@ pub fn leave_on_exit_test() {
   clear_group(pgroup)
 
   // act
-  let t = task.async(fn() { pg.join(pgroup, process.self()) })
-  task.await(t, 100)
+  let parent = process.new_subject()
+  process.spawn(fn() {
+    pg.join(pgroup, process.self())
+    process.send(parent, "yay")
+  })
+  process.receive(parent, 100) |> should.be_ok()
 
   // test
   should.equal(pg.get_members(pgroup), [])
@@ -92,15 +95,14 @@ pub fn monitor_joined_test() {
   let #(monitor, pids) = pg.monitor(TestGroup)
 
   // start a process that joins the group
-  let ppid =
-    process.start(fn() { pg.join(TestGroup, process.self()) }, linked: True)
+  let ppid = process.spawn(fn() { pg.join(TestGroup, process.self()) })
   let assert Ok(pg.ProcessJoined(TestGroup, new_pids)) =
     pg.selecting_process_group_monitor(
       process.new_selector(),
       monitor,
       fn(joined) { joined },
     )
-    |> process.select(100)
+    |> process.selector_receive(100)
 
   // test
   should.equal(pids, [process.self()])
@@ -117,8 +119,7 @@ pub fn monitor_left_test() {
   let #(monitor, pids) = pg.monitor(TestGroup)
 
   // start a process that joins and leaves by exiting
-  let ppid =
-    process.start(fn() { pg.join(TestGroup, process.self()) }, linked: True)
+  let ppid = process.spawn(fn() { pg.join(TestGroup, process.self()) })
 
   // selector for process groups monitor events
   let selector =
@@ -131,12 +132,12 @@ pub fn monitor_left_test() {
   // There should be a join event
   let assert Ok(pg.ProcessJoined(_, join_pids)) =
     selector
-    |> process.select(100)
+    |> process.selector_receive(100)
 
   // And a leave event
   let assert Ok(pg.ProcessLeft(_, leave_pids)) =
     selector
-    |> process.select(100)
+    |> process.selector_receive(100)
 
   // test
   should.equal(pids, [])
